@@ -177,8 +177,8 @@ class KendaraanController extends Controller
             'pic_update' => auth()->user()->username,
         ]);
 
-        // event(new KendaraanUpdated($kendaraan));
-        broadcast(new KendaraanUpdated($kendaraan));
+        event(new KendaraanUpdated($kendaraan));
+        // broadcast(new KendaraanUpdated($kendaraan));
 
         return response()->json([
             'success' => true,

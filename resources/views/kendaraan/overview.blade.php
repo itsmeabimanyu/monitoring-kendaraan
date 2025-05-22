@@ -14,8 +14,8 @@
 
     {{-- offline --}}
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
-    <script src="{{ asset('js/pusher-8.4.0.min.js') }}"></script>
-    <script src="{{ asset('js/echo-1.11.1.js') }}"></script>
+    <script src="{{ asset('js/pusher.min.js') }}"></script>
+    <script src="{{ asset('js/echo.iife.min.js') }}"></script>
 
 </head>
 
@@ -190,23 +190,27 @@
 
         document.addEventListener("DOMContentLoaded", function() {
 
-            // Inisialisasi Echo dan Pusher
-            const echo = new Echo({
-                broadcaster: 'pusher'
-                , key: 'my-local-key'
-                , cluster: 'mt1'
-                , forceTLS: false
-                , wsHost: window.location.hostname, // bisa juga '127.0.0.1'
-                wsPort: 6001
-                , wssPort: 6001, // Tambahkan ini jika kamu aktifkan HTTPS nanti
-                disableStats: true
-                , enabledTransports: ['ws'], // hanya pakai ws, tidak perlu wss untuk lokal
-                encrypted: false, // tambahan opsional, pastikan SSL tidak dipakai
-            });
+        // 2. Inisialisasi Laravel Echo
+        window.Echo = new Echo({
+            broadcaster: 'pusher',
+            key: '{{ env("REVERB_APP_KEY") }}',
+            wsHost: window.location.hostname,
+            wsPort: 8080, // default port Reverb = 6001
+            forceTLS: false,
+            disableStats: true,
+            enabledTransports: ['ws'],
+        });
+    
+        // 3. Cek koneksi WebSocket
+        Echo.connector.pusher.connection.bind('connected', () => {
+            console.log('🔌 WebSocket Connected');
+        });
+
+        Pusher.logToConsole = true;
 
             // Mendengarkan status kendaraan secara real-time
             window.kendaraanIds.forEach(id => {
-                echo.channel(`kendaraan.${id}`)
+                Echo.channel(`kendaraan.${id}`)
                     .listen('.KendaraanUpdated', (event) => {
                         // console.log("Realtime Event:", event);
                         const card = document.querySelector(`[data-id='${event.id}']`);
@@ -357,10 +361,10 @@
                                 }
 
                                 // Jangan gunakan whisper pada public channel
-                                echo.channel(`kendaraan.${id}`).listen('.KendaraanUpdated', (event) => {
+                                //echo.channel(`kendaraan.${id}`).listen('.KendaraanUpdated', (event) => {
                                     // console.log("Realtime Event:", event);
                                     // Update status lainnya di sini
-                                });
+                               // });
 
                                 let modal = bootstrap.Modal.getInstance(document.getElementById('modal' + id));
                                 modal.hide();
